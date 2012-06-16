@@ -1,0 +1,94 @@
+#! /usr/bin/ruby1.9.1
+#-*- encoding: utf-8 -*-
+#
+# Description: Viki.com Subtitle Extractor
+# Author:      Tobias Koch <tobias.koch@gmail.com>
+# License:     Public Domain
+#
+
+INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
+  File.readlink(__FILE__) : __FILE__) + '/..')
+$LOAD_PATH.unshift INSTALL_DIR + '/lib'
+
+VIKISUBEX_VERSION = "0.0.1"
+
+VIKISUBEX_SUCCESS          = 0
+VIKISUBEX_ERROR_INVOCATION = 1
+VIKISUBEX_ERROR_RUNTIME    = 2
+
+VIKISUBEX_EXECUTABLE_NAME = 'vikisubex'
+
+require 'getoptlong'
+require 'vikisubex'
+
+
+def usage
+  $stderr.write "Viki.com Subtitle Vocabulary Extractor for Turkish, version #{VIKISUBEX_VERSION} \n"
+  $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "vikisubex.rb [OPTIONS] <viki_video_url>                                          \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "OPTIONS:                                                                         \n"
+  $stderr.write " --help, -h            Print this help text and exit                             \n"
+  $stderr.write " --mode, -m <mode>     One of 'script' (default) or 'raw'                        \n"
+  $stderr.write "                                                                                 \n"
+end
+
+
+def parse_cmd_line
+  params = { 'mode' => 'script' }
+
+  opts = GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT ],
+    ['--mode', '-m', GetoptLong::REQUIRED_ARGUMENT ]
+  )
+
+  begin
+    opts.quiet = true
+    opts.each do |opt, arg|
+      case opt
+        when '--help'
+          usage
+          exit VIKISUBEX_SUCCESS
+        when '--mode'
+          unless [ 'script', 'raw' ].include? arg
+            msg = "unknown mode '#{arg}"
+            raise VikiSubtitleExtractor::Error, msg
+          end
+          params['mode'] = arg
+        else
+      end
+    end
+  rescue GetoptLong::InvalidOption => e
+    $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: #{e.message}\n"
+    exit VIKISUBEX_ERROR_INVOCATION
+  end
+
+  if ARGV.length != 1
+    $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: no URL specified\n"
+    exit VIKISUBEX_ERROR_INVOCATION
+  end
+
+  begin
+    video_url = URI(ARGV[0])
+  rescue URI::InvalidURIError
+    $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: invalid URL\n"
+    exit VIKISUBEX_ERROR_INVOCATION
+  end
+
+  params['video_url'] = video_url
+  return params
+end
+
+
+begin # main()
+
+  params = parse_cmd_line
+  subvokex = VikiSubtitleExtractor.new(params)
+  subvokex.do_action
+
+rescue VikiSubtitleExtractor::Error => e
+  $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: #{e.message}\n"
+  exit VIKISUBEX_ERROR_RUNTIME
+end
+
