@@ -1,0 +1,76 @@
+#! /usr/bin/ruby1.9.1
+#-*- encoding: utf-8 -*-
+#
+# Description: Tokenize input into wordlists to look up from a dictionary
+# Author:      Tobias Koch <tobias.koch@gmail.com>
+# License:     Public Domain
+#
+
+INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
+  File.readlink(__FILE__) : __FILE__) + '/..')
+$LOAD_PATH.unshift INSTALL_DIR + '/lib'
+
+TOKENIZER_VERSION = "0.0.1"
+
+TOKENIZER_SUCCESS          = 0
+TOKENIZER_ERROR_INVOCATION = 1
+TOKENIZER_ERROR_RUNTIME    = 2
+
+TOKENIZER_EXECUTABLE_NAME = 'vikisubex'
+
+require 'getoptlong'
+require 'tokenize'
+
+
+def usage
+  $stderr.write "Language tools tokenizer for Turkish, version #{TOKENIZER_VERSION}               \n"
+  $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "tokenize <files|stdin>                                                           \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "OPTIONS:                                                                         \n"
+  $stderr.write " --help, -h            Print this help text and exit                             \n"
+  $stderr.write "                                                                                 \n"
+end
+
+
+def parse_cmd_line
+  params = { 'mode' => 'script' }
+
+  opts = GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT ],
+  )
+
+  begin
+    opts.quiet = true
+    opts.each do |opt, arg|
+      case opt
+        when '--help'
+          usage
+          exit TOKENIZER_SUCCESS
+        else
+      end
+    end
+  rescue GetoptLong::InvalidOption => e
+    $stderr.write "#{TOKENIZER_EXECUTABLE_NAME}: #{e.message}\n"
+    exit TOKENIZER_ERROR_INVOCATION
+  end
+
+  return params
+end
+
+
+begin # main()
+
+  params = parse_cmd_line
+  tokenizer = Tokenizer.new(params)
+
+  ARGF.each_line do |line|
+    tokenizer.tokenize line
+  end
+
+rescue Tokenizer::Error => e
+  $stderr.write "#{TOKENIZER_EXECUTABLE_NAME}: #{e.message}\n"
+  exit TOKENIZER_ERROR_RUNTIME
+end
+
