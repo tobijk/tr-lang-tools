@@ -1,6 +1,8 @@
 #-*- encoding: utf-8 -*-
 #
-# Description: Tokenize Turkish text
+# Description: Simple Ruby wrapper for TRMoprh by Çağrı Çöltekin
+#              (see http://www.let.rug.nl/coltekin/trmorph/)
+#
 # Author:      Tobias Koch <tobias.koch@gmail.com>
 # License:     Public Domain
 #
