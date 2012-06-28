@@ -1,7 +1,7 @@
 #! /usr/bin/ruby1.9.1
 #-*- encoding: utf-8 -*-
 #
-# Description: Tokenize input into wordlists to look up from a dictionary
+# Description: Tokenize Turkish input into wordlists
 # Author:      Tobias Koch <tobias.koch@gmail.com>
 # License:     Public Domain
 #
@@ -23,22 +23,29 @@ require 'tokenize'
 
 
 def usage
-  $stderr.write "Language tools tokenizer for Turkish, version #{TOKENIZER_VERSION}               \n"
+  $stderr.write "TR Language Tools Tokenizer, version #{TOKENIZER_VERSION}                        \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "tokenize <files|stdin>                                                           \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "OPTIONS:                                                                         \n"
   $stderr.write " --help, -h            Print this help text and exit                             \n"
+  $stderr.write " --sort, -s            Sort the output                                           \n"
+  $stderr.write " --unique, -u          Remove duplicates from output                             \n"
   $stderr.write "                                                                                 \n"
 end
 
 
 def parse_cmd_line
-  params = { 'mode' => 'script' }
+  params = {
+    :sort => false,
+    :unique => false
+  }
 
   opts = GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT ],
+    ['--sort', '-s', GetoptLong::NO_ARGUMENT ],
+    ['--unique', '-u', GetoptLong::NO_ARGUMENT ]
   )
 
   begin
@@ -48,6 +55,10 @@ def parse_cmd_line
         when '--help'
           usage
           exit TOKENIZER_SUCCESS
+        when '--unique'
+          params[:unique] = true
+        when '--sort'
+          params[:sort] = true
         else
       end
     end
@@ -65,8 +76,16 @@ begin # main()
   params = parse_cmd_line
   tokenizer = Tokenizer.new(params)
 
-  ARGF.each_line do |line|
-    tokenizer.tokenize line
+  if params[:sort] || params[:unique]
+    buffer = []
+    ARGF.each_line do |line|
+      buffer << line
+    end
+    tokenizer.tokenize buffer.join(' ')
+  else
+    ARGF.each_line do |line|
+      tokenizer.tokenize line
+    end
   end
 
 rescue Tokenizer::Error => e

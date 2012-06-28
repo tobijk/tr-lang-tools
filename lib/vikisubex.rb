@@ -17,8 +17,8 @@ class VikiSubtitleExtractor
   end
 
   def initialize(params = {})
-    @video_url = params['video_url']
-    @mode = params['mode']
+    @video_url = params[:video_url]
+    @mode = params[:mode]
   end
 
   def do_action
@@ -71,7 +71,7 @@ class VikiSubtitleExtractor
           .gsub(/<[^>]+>/, '')
         next if content.strip.empty?
         next if content.strip =~ /^[-.!?_,;:]+$/
-        if @mode == 'raw'
+        if @mode == :raw
           puts "#{content.gsub(/\s+/, ' ')}\n"
         else
           puts "%02d:%02d:%02d: #{content}\n" % [hours, mins, secs]

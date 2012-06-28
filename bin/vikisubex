@@ -1,7 +1,7 @@
 #! /usr/bin/ruby1.9.1
 #-*- encoding: utf-8 -*-
 #
-# Description: Viki.com Subtitle Extractor
+# Description: Viki.com Subtitle Extractor for Turkish
 # Author:      Tobias Koch <tobias.koch@gmail.com>
 # License:     Public Domain
 #
@@ -23,7 +23,7 @@ require 'vikisubex'
 
 
 def usage
-  $stderr.write "Viki.com Subtitle Vocabulary Extractor for Turkish, version #{VIKISUBEX_VERSION} \n"
+  $stderr.write "TR Language Tools Subtitle Downloader for Viki.com, version #{VIKISUBEX_VERSION} \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "vikisubex.rb [OPTIONS] <viki_video_url>                                          \n"
@@ -55,7 +55,7 @@ def parse_cmd_line
             msg = "unknown mode '#{arg}"
             raise VikiSubtitleExtractor::Error, msg
           end
-          params['mode'] = arg
+          params[:mode] = arg.intern
         else
       end
     end
@@ -76,7 +76,7 @@ def parse_cmd_line
     exit VIKISUBEX_ERROR_INVOCATION
   end
 
-  params['video_url'] = video_url
+  params[:video_url] = video_url
   return params
 end
 
