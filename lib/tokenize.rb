@@ -32,7 +32,8 @@ class Tokenizer
 
     string = string\
       .gsub(/(?:\p{P}{2,}|\p{P}\s+)/, ' ')\
-      .gsub(/\s+/, ' ')
+      .gsub(/\s+/, ' ') \
+      .gsub('â', 'a')
     tokens = string.split(' ')
     tokens.each do |tok|
       next if tok =~ /\p{N}+/
@@ -74,3 +75,4 @@ class Tokenizer
   end
 
 end
+
