@@ -26,7 +26,7 @@ def usage
   $stderr.write "TR Language Tools Tokenizer, version #{TOKENIZER_VERSION}                        \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
   $stderr.write "                                                                                 \n"
-  $stderr.write "tokenize <files|stdin>                                                           \n"
+  $stderr.write "tokenize [OPTIONS] <files|stdin>                                                 \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "OPTIONS:                                                                         \n"
   $stderr.write " --help, -h            Print this help text and exit                             \n"
