@@ -26,7 +26,7 @@ def usage
   $stderr.write "TR Language Tools Subtitle Downloader for Viki.com, version #{VIKISUBEX_VERSION} \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
   $stderr.write "                                                                                 \n"
-  $stderr.write "vikisubex.rb [OPTIONS] <viki_video_url>                                          \n"
+  $stderr.write "vikisubex [OPTIONS] <viki_video_url>                                             \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "OPTIONS:                                                                         \n"
   $stderr.write " --help, -h            Print this help text and exit                             \n"
