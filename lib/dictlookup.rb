@@ -1,6 +1,6 @@
 #-*- encoding: utf-8 -*-
 #
-# Description: Lookup TR =>DE words on pons.eu
+# Description: Lookup TR => DE words on pons.eu
 # Author:      Tobias Koch <tobias.koch@gmail.com>
 # License:     Public Domain
 #
@@ -10,18 +10,28 @@ require 'uri'
 require 'nokogiri'
 require 'pp'
 
-def load_dictionary_provider(provider = 'pons')
-  known_providers = [ 'pons' ]
+class OnlineDictionary
 
-  case provider
-    when 'pons'
-      return OnlineDictionaryPons.new
-    else
-      raise StandardError, "unknown dictionary provider '#{provider}'."
+  class Error < StandardError
   end
+
+  class << self
+  
+    def load_dictionary_provider(params = {:provider => :pons})
+      case params[:provider]
+        when :pons
+          return OnlineDictionaryPons.new(params)
+        else
+          raise StandardError, "unknown dictionary provider '#{params[:provider]}'."
+      end
+    end
+
+  end
+
 end
 
-class OnlineDictionaryPons
+
+class OnlineDictionaryPons < OnlineDictionary
 
   XSL_STYLESHEET = <<EOF
 <?xml version="1.0" encoding="UTF-8"?> 
@@ -38,7 +48,7 @@ class OnlineDictionaryPons
 </xsl:stylesheet>
 EOF
 
-  def initialize
+  def initialize(params = {})
     @stylesheet = Nokogiri::XSLT(XSL_STYLESHEET)
   end
 
