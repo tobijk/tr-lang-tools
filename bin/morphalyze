@@ -68,12 +68,16 @@ begin # main()
   params = parse_cmd_line
   trmorph = TRMorph.new(params)
 
-
+  vocabulary = Hash.new { |h, k| h[k] = 1 }
   ARGF.each_line do |line|
     roots = trmorph.find_roots line
     roots.each do |r|
-      puts r
+      vocabulary[r]
     end
+  end
+
+  vocabulary.keys.each do |term|
+    puts term
   end
 
 rescue Exception => e
