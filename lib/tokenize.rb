@@ -41,32 +41,35 @@ class Tokenizer
       result << downcase!(tok)
     end
 
-    if @params[:sort]
-      result.sort! do |a, b|
-        rval = 0
-
-        a_chars = a.split(//)
-        b_chars = b.split(//)
-
-        0.upto(a_chars.size - 1) do |i|
-          if b_chars[i].nil?
-            rval = +1
-            break
-          else
-            rval = ALPHABET_WEIGHTS[a_chars[i]] - ALPHABET_WEIGHTS[b_chars[i]]
-            break if rval != 0
-          end
-        end
-
-        rval
-      end
-    end
-
-    result.uniq! if @params[:unique]
+    sort!(result) if @params[:sort]
+    result.uniq!  if @params[:unique]
 
     result.each do |token|
       puts token
     end
+  end
+
+  def sort!(tokens)
+    tokens.sort! do |a, b|
+      rval = 0
+
+      a_chars = a.split(//)
+      b_chars = b.split(//)
+
+      0.upto(a_chars.size - 1) do |i|
+        if b_chars[i].nil?
+          rval = +1
+          break
+        else
+          rval = ALPHABET_WEIGHTS[a_chars[i]] - ALPHABET_WEIGHTS[b_chars[i]]
+          break if rval != 0
+        end
+      end
+
+      rval
+    end
+
+    return tokens
   end
 
   def downcase!(string)
