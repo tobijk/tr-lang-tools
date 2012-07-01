@@ -1,0 +1,61 @@
+TOOLS FOR TURKISH LEARNERS
+
+This projects is a collection of scripts that are meant to make learning Turkish
+more fun and more efficient by tapping into media sources and tools available in
+abundance online.
+
+
+PREREQUISITES
+
+This is not a language course, meaning you will need to know already some basic
+Turkish in order to make good use of the tools provided.
+
+On the technical side, you will need a Ruby installation and install the
+following gem(s)
+
+* libarchive_ruby_swig
+* nokogiri
+
+In addition, you need to install TRMorph by Çağrı Çöltekin, available from
+
+    http://www.let.rug.nl/coltekin/trmorph/
+
+which in turn requires an installation of the Stuttgart Finite State Transducer
+Tools available from
+
+    http://www.ims.uni-stuttgart.de/projekte/gramotron/SOFTWARE/SFST.html
+
+You then have to put a shell script in your path that invokes TRMorph in the
+following fashion
+
+    #!/bin/sh
+    exec fst-parse /usr/lib/trmorph/trmorph.a $*
+
+
+TOOLKIT DESCRIPTION
+
+1. The Subtitle Downloader
+
+This tool is called 'vikisubex' and allows you to download the Turkish subtitles
+for shows on Viki.com.
+
+2. The Tokenizer
+
+The 'tokenizer' simply splits an input text into a stream of tokens with all
+punctuation removed. Each token is printed on a separate line. The tokenizer can
+also sort tokens according to the Turkish Alphabet and remove duplicates.
+
+3. The Morphological Analyzer
+
+'morphalzye' is a wrapper around TRMorph, a very sophisticated morphological
+analyzer developed by Çağrı Çöltekin. It takes as input the token list produced
+by the tokenizer and for each token generates a list of possible words that may
+be roots of the word that a token represents.
+
+4. The Online Dictionary Interface
+
+The 'dictlookup' tool is an interface to various online dictionaries and
+translation services. It takes as input a list of words and returns a series of
+translations including common phrases and compound expressions as provided by
+the dictionary.
+
