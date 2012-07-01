@@ -8,7 +8,7 @@
 require 'net/http'
 require 'uri'
 require 'nokogiri'
-require 'pp'
+require 'libarchive_rs'
 
 class OnlineDictionary
 
@@ -56,11 +56,29 @@ EOF
     translations = Hash.new { |h, k| h[k] = [] }
 
     term = URI::encode_www_form_component(token.strip)
-    url = "http://en.pons.eu/dict/search/results/?l=detr&in=tr&lf=tr&q=#{term}"
-    page = Nokogiri::HTML(Net::HTTP.get(URI(url)))
+    uri = URI("http://en.pons.eu/dict/search/results/?l=detr&in=tr&lf=tr&q=#{term}")
 
-    sources = page.xpath("//td[@class = 'source']")
-    targets = page.xpath("//td[@class = 'target']")
+    request = Net::HTTP::Get.new(uri.request_uri)
+    request['Accept-Encoding'] = 'gzip'
+
+    # submit request
+    response = Net::HTTP.start(uri.host, uri.port) do |http|
+      http.request(request)
+    end
+    page = response.body
+
+    # unzip page
+    if page.start_with?("\x1f\x8b\x08".force_encoding("ASCII-8BIT"))
+      Archive.read_open_memory(page, nil, true) do |archive|
+        archive.next_header
+        page = archive.read_data()
+      end
+    end
+
+    page = Nokogiri::HTML(page)
+
+    sources = page.xpath("//div[@class = 'lang'][@id = 'tr']//td[@class = 'source']")
+    targets = page.xpath("//div[@class = 'lang'][@id = 'tr']//td[@class = 'target']")
 
     sources.zip(targets).each do |s, t|
       s_doc = Nokogiri::XML::Document.new

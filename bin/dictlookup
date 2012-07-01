@@ -84,7 +84,7 @@ begin # main()
     end
   end
 
-rescue OnlineDictionary::Error => e
+rescue Exception => e
   $stderr.write "#{DICTLOOKUP_EXECUTABLE_NAME}: #{e.message}\n"
   exit DICTLOOKUP_ERROR_RUNTIME
 end
