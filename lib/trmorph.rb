@@ -44,7 +44,7 @@ class TRMorph
   end
 
   def find_roots(token)
-    roots = Hash.new { |h, k| h[k] = [] }
+    roots = Hash.new { |h, k| h[k] = 1 }
 
     parse(token).each_line do |line|
       next unless m = line.match('([^<]+)<([^>]+)>.*')
