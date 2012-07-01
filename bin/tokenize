@@ -88,7 +88,7 @@ begin # main()
     end
   end
 
-rescue Tokenizer::Error => e
+rescue Exception => e
   $stderr.write "#{TOKENIZER_EXECUTABLE_NAME}: #{e.message}\n"
   exit TOKENIZER_ERROR_RUNTIME
 end
