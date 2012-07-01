@@ -1,0 +1,83 @@
+#! /usr/bin/ruby1.9.1
+#-*- encoding: utf-8 -*-
+#
+# Description: Tokenize Turkish input into wordlists
+# Author:      Tobias Koch <tobias.koch@gmail.com>
+# License:     Public Domain
+#
+
+INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
+  File.readlink(__FILE__) : __FILE__) + '/..')
+$LOAD_PATH.unshift INSTALL_DIR + '/lib'
+
+MORPHALYZER_VERSION = "0.0.1"
+
+MORPHALYZER_SUCCESS          = 0
+MORPHALYZER_ERROR_INVOCATION = 1
+MORPHALYZER_ERROR_RUNTIME    = 2
+
+MORPHALYZER_EXECUTABLE_NAME = 'vikisubex'
+
+require 'getoptlong'
+require 'trmorph'
+
+
+def usage
+  $stderr.write "TR Language Tools TRMorph Wrapper, version #{MORPHALYZER_VERSION}                \n"
+  $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "morphalyze [OPTIONS] <files|stdin>                                               \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "OPTIONS:                                                                         \n"
+  $stderr.write " --help, -h            Print this help text and exit                             \n"
+  $stderr.write "                                                                                 \n"
+end
+
+
+def parse_cmd_line
+  params = {
+    :sort => false,
+    :unique => false
+  }
+
+  opts = GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT ],
+  )
+
+  begin
+    opts.quiet = true
+    opts.each do |opt, arg|
+      case opt
+        when '--help'
+          usage
+          exit MORPHALYZER_SUCCESS
+        else
+      end
+    end
+  rescue GetoptLong::InvalidOption => e
+    $stderr.write "#{MORPHALYZER_EXECUTABLE_NAME}: #{e.message}\n"
+    exit MORPHALYZER_ERROR_INVOCATION
+  end
+
+  return params
+end
+
+
+begin # main()
+
+  params = parse_cmd_line
+  trmorph = TRMorph.new(params)
+
+
+  ARGF.each_line do |line|
+    roots = trmorph.find_roots line
+    roots.each do |r|
+      puts r
+    end
+  end
+
+rescue Exception => e
+  $stderr.write "#{MORPHALYZER_EXECUTABLE_NAME}: #{e.message}\n"
+  exit MORPHALYZER_ERROR_RUNTIME
+end
+
