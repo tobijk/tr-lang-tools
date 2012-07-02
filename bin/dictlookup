@@ -76,10 +76,18 @@ begin # main()
   dictionary = OnlineDictionary::load_dictionary_provider(params)
 
   ARGF.each_line do |token|
-    result = dictionary.translate(token.strip)
+    token.strip!
+    result = dictionary.translate(token)
+
     unless result.empty?
-      result.each_pair do |key, values|
-        puts "#{key}: #{values.join(', ')}"
+      unless result[token].nil?
+        puts "#{token}: #{result[token].join(', ')}\n"
+      else
+        i = 0
+        result.each_pair do |key, values|
+          puts "#{key}: #{values.join(', ')}"
+          break if (i += 1) > 2
+        end
       end
     end
   end

@@ -41,7 +41,10 @@ class OnlineDictionaryPons < OnlineDictionary
     <xsl:apply-templates/>
   </xsl:template>
 
-  <xsl:template match="span[@class = 'genus']">
+  <xsl:template match="span[
+    @class = 'genus' or
+    @class = 'feminine' or
+    @class = 'complement']">
     <!-- cut -->
   </xsl:template>
 
@@ -53,9 +56,10 @@ EOF
   end
 
   def translate(token)
-    translations = Hash.new { |h, k| h[k] = [] }
+    translations = {}
 
-    term = URI::encode_www_form_component(token.strip)
+    token.strip!
+    term = URI::encode_www_form_component(token)
     uri = URI("http://en.pons.eu/dict/search/results/?l=detr&in=tr&lf=tr&q=#{term}")
 
     request = Net::HTTP::Get.new(uri.request_uri)
@@ -77,17 +81,21 @@ EOF
 
     page = Nokogiri::HTML(page)
 
-    sources = page.xpath("//div[@class = 'lang'][@id = 'tr']//td[@class = 'source']")
-    targets = page.xpath("//div[@class = 'lang'][@id = 'tr']//td[@class = 'target']")
+    sources = page.xpath("//div[@class = 'lang'][@id = 'tr']//table[contains(@class, 'translations')]//td[@class = 'source']")
+    targets = page.xpath("//div[@class = 'lang'][@id = 'tr']//table[contains(@class, 'translations')]//td[@class = 'target']")
 
     sources.zip(targets).each do |s, t|
       s_doc = Nokogiri::XML::Document.new
       s.dup(1).parent = s_doc
       t_doc = Nokogiri::XML::Document.new
       t.dup(1).parent = t_doc
-      s = @stylesheet.transform(s_doc).content
-      t = @stylesheet.transform(t_doc).content
-      translations[s.strip] << t.strip
+      s = @stylesheet.transform(s_doc).content.strip
+      t = @stylesheet.transform(t_doc).content.strip
+      if translations[s].nil?
+        translations[s] = [t]
+      else
+        translations[s] << t
+      end
     end
 
     return translations
