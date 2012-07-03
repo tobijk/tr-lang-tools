@@ -87,6 +87,8 @@ begin # main()
   subvokex = VikiSubtitleExtractor.new(params)
   subvokex.do_action
 
+rescue SystemExit => e
+  exit e.status
 rescue Exception => e
   $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: #{e.message}\n"
   exit VIKISUBEX_ERROR_RUNTIME

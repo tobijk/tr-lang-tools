@@ -16,7 +16,7 @@ DICTLOOKUP_SUCCESS          = 0
 DICTLOOKUP_ERROR_INVOCATION = 1
 DICTLOOKUP_ERROR_RUNTIME    = 2
 
-DICTLOOKUP_EXECUTABLE_NAME = 'vikisubex'
+DICTLOOKUP_EXECUTABLE_NAME = 'dictlookup'
 
 require 'getoptlong'
 require 'dictlookup'
@@ -84,6 +84,8 @@ begin # main()
     end
   end
 
+rescue SystemExit => e
+  exit e.status
 rescue Exception => e
   $stderr.write "#{DICTLOOKUP_EXECUTABLE_NAME}: #{e.message}\n"
   exit DICTLOOKUP_ERROR_RUNTIME

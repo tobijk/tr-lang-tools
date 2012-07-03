@@ -16,7 +16,7 @@ TOKENIZER_SUCCESS          = 0
 TOKENIZER_ERROR_INVOCATION = 1
 TOKENIZER_ERROR_RUNTIME    = 2
 
-TOKENIZER_EXECUTABLE_NAME = 'vikisubex'
+TOKENIZER_EXECUTABLE_NAME = 'tokenize'
 
 require 'getoptlong'
 require 'tokenize'
@@ -88,6 +88,8 @@ begin # main()
     end
   end
 
+rescue SystemExit => e
+  exit e.status
 rescue Exception => e
   $stderr.write "#{TOKENIZER_EXECUTABLE_NAME}: #{e.message}\n"
   exit TOKENIZER_ERROR_RUNTIME

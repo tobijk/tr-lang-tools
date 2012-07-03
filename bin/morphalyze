@@ -16,7 +16,7 @@ MORPHALYZER_SUCCESS          = 0
 MORPHALYZER_ERROR_INVOCATION = 1
 MORPHALYZER_ERROR_RUNTIME    = 2
 
-MORPHALYZER_EXECUTABLE_NAME = 'vikisubex'
+MORPHALYZER_EXECUTABLE_NAME = 'morphalyze'
 
 require 'getoptlong'
 require 'trmorph'
@@ -80,6 +80,8 @@ begin # main()
     puts term
   end
 
+rescue SystemExit => e
+  exit e.status
 rescue Exception => e
   $stderr.write "#{MORPHALYZER_EXECUTABLE_NAME}: #{e.message}\n"
   exit MORPHALYZER_ERROR_RUNTIME
