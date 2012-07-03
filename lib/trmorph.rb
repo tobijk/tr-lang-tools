@@ -16,6 +16,10 @@ class TRMorph
     end
   end
 
+  def initialize(params = {})
+    @params = { :hint => false }.merge!(params)
+  end
+
   def parse(token)
     result = ""
 
@@ -44,6 +48,13 @@ class TRMorph
   end
 
   def find_roots(token)
+    type_table = {
+      'adj' => 'adjective',
+      'adv' => 'adverb',
+      'v' => 'verb',
+      'n' => 'noun'
+    }
+
     roots = Hash.new { |h, k| h[k] = 1 }
 
     parse(token).each_line do |line|
@@ -51,6 +62,7 @@ class TRMorph
       root = m[1]
       type = m[2]
       root += mek_or_mak?(root) if type == 'v'
+      root += "<#{type_table[type]}>" if (@params[:hint] && type_table[type])
       roots[root]
     end
 

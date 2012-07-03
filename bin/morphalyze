@@ -30,18 +30,19 @@ def usage
   $stderr.write "                                                                                 \n"
   $stderr.write "OPTIONS:                                                                         \n"
   $stderr.write " --help, -h            Print this help text and exit                             \n"
+  $stderr.write " --hint                Attach possible word type in the form 'stem<type>'        \n"
   $stderr.write "                                                                                 \n"
 end
 
 
 def parse_cmd_line
   params = {
-    :sort => false,
-    :unique => false
+    :hint => false
   }
 
   opts = GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT ],
+    ['--hint', GetoptLong::NO_ARGUMENT ]
   )
 
   begin
@@ -51,6 +52,8 @@ def parse_cmd_line
         when '--help'
           usage
           exit MORPHALYZER_SUCCESS
+        when '--hint'
+          params[:hint] = true
         else
       end
     end
