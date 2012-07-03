@@ -98,7 +98,7 @@ EOF
       end
     end
 
-    return translations
+    return translations.each_value { |v| v.uniq! }
   end
 
 end
