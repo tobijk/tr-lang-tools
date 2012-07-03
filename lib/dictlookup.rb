@@ -59,7 +59,7 @@ EOF
     @stylesheet = Nokogiri::XSLT(XSL_STYLESHEET)
   end
 
-  def translate(token)
+  def translate(token, hint)
     translations = {}
 
     token.strip!
@@ -107,18 +107,19 @@ EOF
 
 end
 
+
 class OnlineDictionaryGoogle < OnlineDictionary
 
-  def initialize(param = {})
-    #pass
+  def initialize(params = {})
+    @params = { :verbose => false }.merge!(params)
   end
 
-  def translate(token)
+  def translate(token, hint)
     translations = {}
 
     token.strip!
     term = URI::encode_www_form_component(token)
-    uri = URI("http://translate.google.com/translate_a/t?client=t&text=#{term}&hl=de&sl=tr&tl=de&ie=UTF-8&oe=UTF-8")
+    uri = URI("http://translate.google.com/translate_a/t?client=t&text=#{term}&hl=en&sl=tr&tl=en&ie=UTF-8&oe=UTF-8")
 
     request = Net::HTTP::Get.new(uri.request_uri)
     request['Accept-Encoding'] = 'gzip'
@@ -139,6 +140,14 @@ class OnlineDictionaryGoogle < OnlineDictionary
 
     return translations unless page[1].is_a? Array
 
+    # check if there is a match for the exact word type
+    page[1].each { |t|
+      if t[0] == hint
+        translations[token] = t[1]
+        return translations
+      end
+    } unless hint.nil?
+
     page[1].each do |t|
       if translations[token].nil?
         translations[token] = t[1]
@@ -151,3 +160,4 @@ class OnlineDictionaryGoogle < OnlineDictionary
   end
 
 end
+

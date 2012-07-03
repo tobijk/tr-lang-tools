@@ -84,7 +84,15 @@ begin # main()
 
   ARGF.each_line do |token|
     token.strip!
-    result = dictionary.translate(token)
+
+    hint = nil
+
+    if token =~ /([^<]+)<([^>]+)>/
+      token = $1
+      hint  = $2
+    end
+
+    result = dictionary.translate(token, hint)
 
     unless result.empty?
       if params[:verbose]
