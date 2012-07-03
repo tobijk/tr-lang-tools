@@ -80,15 +80,7 @@ begin # main()
     result = dictionary.translate(token)
 
     unless result.empty?
-      unless result[token].nil?
-        puts "#{token}: #{result[token].join(', ')}\n"
-      else
-        i = 0
-        result.each_pair do |key, values|
-          puts "#{key}: #{values.join(', ')}"
-          break if (i += 1) > 2
-        end
-      end
+      puts "#{token}: #{result[token].join(', ')}\n" unless result[token].nil?
     end
   end
 
