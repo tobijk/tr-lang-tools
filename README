@@ -10,7 +10,7 @@ PREREQUISITES
 This is not a language course, meaning you will need to know already some basic
 Turkish in order to make good use of the tools provided.
 
-On the technical side, you will need a Ruby installation and install the
+On the technical side, you will need a Ruby 1.9 installation and install the
 following gem(s)
 
 * libarchive_ruby_swig
