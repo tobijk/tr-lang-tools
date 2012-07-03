@@ -9,6 +9,7 @@ require 'rubygems'
 require 'net/http'
 require 'uri'
 require 'nokogiri'
+require 'json'
 require 'libarchive_rs'
 
 class OnlineDictionary
@@ -17,11 +18,13 @@ class OnlineDictionary
   end
 
   class << self
-  
+ 
     def load_dictionary_provider(params = {:provider => :pons})
       case params[:provider]
         when :pons
           return OnlineDictionaryPons.new(params)
+        when :google
+          return OnlineDictionaryGoogle.new(params)
         else
           raise StandardError, "unknown dictionary provider '#{params[:provider]}'."
       end
@@ -90,8 +93,8 @@ EOF
       s.dup(1).parent = s_doc
       t_doc = Nokogiri::XML::Document.new
       t.dup(1).parent = t_doc
-      s = @stylesheet.transform(s_doc).content.strip
-      t = @stylesheet.transform(t_doc).content.strip
+      s = @stylesheet.transform(s_doc).content.strip.gsub(/\s+/, ' ')
+      t = @stylesheet.transform(t_doc).content.strip.gsub(/\s+/, ' ')
       if translations[s].nil?
         translations[s] = [t]
       else
@@ -104,3 +107,47 @@ EOF
 
 end
 
+class OnlineDictionaryGoogle < OnlineDictionary
+
+  def initialize(param = {})
+    #pass
+  end
+
+  def translate(token)
+    translations = {}
+
+    token.strip!
+    term = URI::encode_www_form_component(token)
+    uri = URI("http://translate.google.com/translate_a/t?client=t&text=#{term}&hl=de&sl=tr&tl=de&ie=UTF-8&oe=UTF-8")
+
+    request = Net::HTTP::Get.new(uri.request_uri)
+    request['Accept-Encoding'] = 'gzip'
+
+    response = Net::HTTP.start(uri.host, uri.port) do |http|
+      http.request(request)
+    end
+    page = response.body
+
+    # unzip page
+    if page.start_with?("\x1f\x8b\x08".force_encoding("ASCII-8BIT"))
+      Archive.read_open_memory(page, nil, true) do |archive|
+        archive.next_header
+        page = archive.read_data()
+      end
+    end
+    page = JSON::load(page.gsub(/,+/, ','))
+
+    return translations unless page[1].is_a? Array
+
+    page[1].each do |t|
+      if translations[token].nil?
+        translations[token] = t[1]
+      else
+        translations[token + " (#{t[0]})"] = t[1]
+      end
+    end
+
+    return translations
+  end
+
+end
