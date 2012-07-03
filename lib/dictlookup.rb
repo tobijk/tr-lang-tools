@@ -5,6 +5,7 @@
 # License:     Public Domain
 #
 
+require 'rubygems'
 require 'net/http'
 require 'uri'
 require 'nokogiri'
