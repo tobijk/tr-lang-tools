@@ -31,18 +31,23 @@ def usage
   $stderr.write "OPTIONS:                                                                         \n"
   $stderr.write " --help, -h             Print this help text and exit                            \n"
   $stderr.write " --provider, -p <name>  Which provider to use for the lookup, supported are:     \n"
-  $stderr.write "                        * 'pons':   use the Pons Online Dictionary               \n"
-  $stderr.write "                        * 'google': use Google Translate                         \n"
+  $stderr.write "                        * 'pons'   - use the Pons Online Dictionary              \n"
+  $stderr.write "                        * 'google' - use Google Translate                        \n"
+  $stderr.write " --verbose, -v          Print secondary results and catch phrases                \n"
   $stderr.write "                                                                                 \n"
 end
 
 
 def parse_cmd_line
-  params = { :provider => :pons }
+  params = {
+    :provider => :pons,
+    :verbose  => false
+  }
 
   opts = GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT ],
-    ['--provider', '-p', GetoptLong::REQUIRED_ARGUMENT ]
+    ['--provider', '-p', GetoptLong::REQUIRED_ARGUMENT ],
+    ['--verbose', '-v', GetoptLong::NO_ARGUMENT ]
   )
 
   begin
@@ -58,6 +63,8 @@ def parse_cmd_line
             raise GetoptLong::InvalidOption, msg
           end
           params[:provider] = arg.intern
+        when '--verbose'
+          params[:verbose] = true
         else
       end
     end
@@ -80,7 +87,13 @@ begin # main()
     result = dictionary.translate(token)
 
     unless result.empty?
-      puts "#{token}: #{result[token].join(', ')}\n" unless result[token].nil?
+      if params[:verbose]
+        result.each_pair { |k, v|
+          puts "#{k}: #{v.join(', ')}\n"
+        }
+      else
+        puts "#{token}: #{result[token].join(', ')}\n" unless result[token].nil?
+      end
     end
   end
 
