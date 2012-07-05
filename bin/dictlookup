@@ -30,6 +30,7 @@ def usage
   $stderr.write "                                                                                 \n"
   $stderr.write "OPTIONS:                                                                         \n"
   $stderr.write " --help, -h             Print this help text and exit                            \n"
+  $stderr.write " --format, -f <fmt>     One of 'text' (default), 'xml', 'html'                   \n"
   $stderr.write " --provider, -p <name>  Which provider to use for the lookup, supported are:     \n"
   $stderr.write "                        * 'pons'   - use the Pons Online Dictionary              \n"
   $stderr.write "                        * 'google' - use Google Translate                        \n"
@@ -41,12 +42,14 @@ end
 def parse_cmd_line
   params = {
     :provider => :pons,
-    :verbose  => false
+    :verbose  => false,
+    :format   => :text
   }
 
   opts = GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT ],
     ['--provider', '-p', GetoptLong::REQUIRED_ARGUMENT ],
+    ['--format', '-f', GetoptLong::REQUIRED_ARGUMENT ],
     ['--verbose', '-v', GetoptLong::NO_ARGUMENT ]
   )
 
@@ -57,6 +60,12 @@ def parse_cmd_line
         when '--help'
           usage
           exit DICTLOOKUP_SUCCESS
+        when '--format'
+          unless [ 'text', 'xml', 'html' ].include? arg
+            msg = "unknown format option '#{arg}'"
+            raise GetoptLong::InvalidOption msg
+          end
+          params[:format] = arg.intern
         when '--provider'
           unless [ 'pons', 'google' ].include? arg
             msg = "unknown provider '#{arg}"
@@ -77,6 +86,16 @@ def parse_cmd_line
 end
 
 
+def print_xml(vocabulary)
+
+end
+
+
+def print_html(vocabulary)
+
+end
+
+
 begin # main()
 
   params = parse_cmd_line
@@ -85,24 +104,28 @@ begin # main()
   ARGF.each_line do |token|
     token.strip!
 
-    hint = nil
-
-    if token =~ /([^<]+)<([^>]+)>/
+    if token =~ /([^\[]+)\s*\[([^\]]+)\]/
       token = $1
-      hint  = $2
+      hints = $2.gsub(/\s+/, '').split(',')
+    else
+      hints = []
     end
 
-    result = dictionary.translate(token, hint)
+    result = dictionary.translate(token, hints)
 
-    unless result.empty?
-      if params[:verbose]
-        result.each_pair { |k, v|
-          puts "#{k}: #{v.join(', ')}\n"
-        }
-      else
-        puts "#{token}: #{result[token].join(', ')}\n" unless result[token].nil?
-      end
+    case params[:format]
+      when :text
+        unless result.empty?
+          result.each_pair { |k, v|
+            puts "#{k}: #{v.join(', ')}\n"
+          }
+        end
+      when :xml
+        print_xml(result)
+      when :html
+        print_html(result)
     end
+
   end
 
 rescue SystemExit => e

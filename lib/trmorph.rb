@@ -47,26 +47,32 @@ class TRMorph
     return 'mak'
   end
 
-  def find_roots(token)
+  def find_roots(token, vocabulary = Hash.new { |h, k| h[k] = [] })
     type_table = {
       'adj' => 'adjective',
       'adv' => 'adverb',
-      'v' => 'verb',
-      'n' => 'noun'
+      'v'   => 'verb',
+      'n'   => 'noun',
+      'ij'  => 'interjection',
+      'prn' => 'pronoun'
     }
 
-    roots = Hash.new { |h, k| h[k] = 1 }
+    num_roots_found = 0
 
     parse(token).each_line do |line|
       next unless m = line.match('([^<]+)<([^>]+)>.*')
       root = m[1]
-      type = m[2]
-      root += mek_or_mak?(root) if type == 'v'
-      root += "<#{type_table[type]}>" if (@params[:hint] && type_table[type])
-      roots[root]
+      type = type_table[m[2]]
+      root += mek_or_mak?(root) if type == 'verb'
+      if @params[:hint] && type && !vocabulary[root].include?(type)
+        vocabulary[root] << type
+      else
+        vocabulary[root]
+      end
+      num_roots_found += 1
     end
 
-    roots.keys
+    return num_roots_found
   end
 
 end

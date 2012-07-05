@@ -23,26 +23,29 @@ require 'trmorph'
 
 
 def usage
-  $stderr.write "TR Language Tools TRMorph Wrapper, version #{MORPHALYZER_VERSION}                \n"
-  $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
-  $stderr.write "                                                                                 \n"
-  $stderr.write "morphalyze [OPTIONS] <files|stdin>                                               \n"
-  $stderr.write "                                                                                 \n"
-  $stderr.write "OPTIONS:                                                                         \n"
-  $stderr.write " --help, -h            Print this help text and exit                             \n"
-  $stderr.write " --hint                Attach possible word type in the form 'stem<type>'        \n"
-  $stderr.write "                                                                                 \n"
+  $stderr.write "TR Language Tools TRMorph Wrapper, version #{MORPHALYZER_VERSION}                  \n"
+  $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                                \n"
+  $stderr.write "                                                                                   \n"
+  $stderr.write "morphalyze [OPTIONS] <files|stdin>                                                 \n"
+  $stderr.write "                                                                                   \n"
+  $stderr.write "OPTIONS:                                                                           \n"
+  $stderr.write " --help, -h            Print this help text and exit                               \n"
+  $stderr.write " --hints, -x           Attach possible word types, i.e. 'stem [type1, type2, ...]' \n"
+  $stderr.write " --pass-unknown, -p    Pass through unknown words as they are                      \n"
+  $stderr.write "                                                                                   \n"
 end
 
 
 def parse_cmd_line
   params = {
-    :hint => false
+    :hint => false,
+    :pass_unknown => false
   }
 
   opts = GetoptLong.new(
     ['--help', '-h', GetoptLong::NO_ARGUMENT ],
-    ['--hint', GetoptLong::NO_ARGUMENT ]
+    ['--hints', '-x', GetoptLong::NO_ARGUMENT ],
+    ['--pass-unknown', '-p', GetoptLong::NO_ARGUMENT ]
   )
 
   begin
@@ -52,8 +55,10 @@ def parse_cmd_line
         when '--help'
           usage
           exit MORPHALYZER_SUCCESS
-        when '--hint'
+        when '--hints'
           params[:hint] = true
+        when '--pass-unknown'
+          params[:pass_unknown] = true
         else
       end
     end
@@ -71,16 +76,21 @@ begin # main()
   params = parse_cmd_line
   trmorph = TRMorph.new(params)
 
-  vocabulary = Hash.new { |h, k| h[k] = 1 }
+  vocabulary = Hash.new { |h, k| h[k] = [] }
   ARGF.each_line do |line|
-    roots = trmorph.find_roots line
-    roots.each do |r|
-      vocabulary[r]
+    line.strip!
+    root_count = trmorph.find_roots(line, vocabulary)
+    if root_count == 0 && params[:pass_unknown]
+      vocabulary[line]
     end
   end
 
-  vocabulary.keys.each do |term|
-    puts term
+  vocabulary.each_pair do |word, types|
+    output = word
+    if params[:hint] && !types.empty?
+      output += " [#{types.join(', ')}]"
+    end
+    puts output
   end
 
 rescue SystemExit => e

@@ -57,6 +57,7 @@ EOF
 
   def initialize(params = {})
     @stylesheet = Nokogiri::XSLT(XSL_STYLESHEET)
+    @verbose = params[:verbose]
   end
 
   def translate(token, hint)
@@ -100,6 +101,11 @@ EOF
       else
         translations[s] << t
       end
+      break if !@verbose && translations.keys.size >= 3 
+    end
+
+    if translations[token] && !@verbose
+      translations.delete_if { |k, v| k != token }
     end
 
     return translations.each_value { |v| v.uniq! }
@@ -114,7 +120,7 @@ class OnlineDictionaryGoogle < OnlineDictionary
     @params = { :verbose => false }.merge!(params)
   end
 
-  def translate(token, hint)
+  def translate(token, hints)
     translations = {}
 
     token.strip!
@@ -141,19 +147,13 @@ class OnlineDictionaryGoogle < OnlineDictionary
     return translations unless page[1].is_a? Array
 
     # check if there is a match for the exact word type
-    page[1].each { |t|
-      if t[0] == hint
-        translations[token] = t[1]
-        return translations
-      end
-    } unless hint.nil?
+    unless hints.empty?
+      page[1].each { |t| translations["#{token} (#{t[0]})"] = t[1][0,5] if hints.include? t[0] }
+    end
 
-    page[1].each do |t|
-      if translations[token].nil?
-        translations[token] = t[1]
-      else
-        translations[token + " (#{t[0]})"] = t[1]
-      end
+    # fallback
+    if translations.empty?
+      page[1].each { |t| translations["#{token} (#{t[0]})"] = t[1][0,5] }
     end
 
     return translations
