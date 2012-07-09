@@ -10,20 +10,19 @@ INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
   File.readlink(__FILE__) : __FILE__) + '/..')
 $LOAD_PATH.unshift INSTALL_DIR + '/lib'
 
-TOKENIZER_VERSION = "0.0.1"
-
 TOKENIZER_SUCCESS          = 0
 TOKENIZER_ERROR_INVOCATION = 1
 TOKENIZER_ERROR_RUNTIME    = 2
 
 TOKENIZER_EXECUTABLE_NAME = 'tokenize'
 
+require 'version'
 require 'getoptlong'
 require 'tokenize'
 
 
 def usage
-  $stderr.write "TR Language Tools Tokenizer, version #{TOKENIZER_VERSION}                        \n"
+  $stderr.write "TR Language Tools Tokenizer, version #{TRTOOLS_VERSION}                          \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "tokenize [OPTIONS] <files|stdin>                                                 \n"

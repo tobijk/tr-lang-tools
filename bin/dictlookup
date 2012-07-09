@@ -10,20 +10,19 @@ INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
   File.readlink(__FILE__) : __FILE__) + '/..')
 $LOAD_PATH.unshift INSTALL_DIR + '/lib'
 
-DICTLOOKUP_VERSION = "0.0.1"
-
 DICTLOOKUP_SUCCESS          = 0
 DICTLOOKUP_ERROR_INVOCATION = 1
 DICTLOOKUP_ERROR_RUNTIME    = 2
 
 DICTLOOKUP_EXECUTABLE_NAME = 'dictlookup'
 
+require 'version'
 require 'getoptlong'
 require 'dictlookup'
 
 
 def usage
-  $stderr.write "TR Language Tools online dictionary lookup, version #{DICTLOOKUP_VERSION}        \n"
+  $stderr.write "TR Language Tools online dictionary lookup, version #{TRTOOLS_VERSION}           \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "dictlookup [OPTIONS] <files|stdin>                                               \n"

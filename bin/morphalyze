@@ -10,20 +10,19 @@ INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
   File.readlink(__FILE__) : __FILE__) + '/..')
 $LOAD_PATH.unshift INSTALL_DIR + '/lib'
 
-MORPHALYZER_VERSION = "0.0.1"
-
 MORPHALYZER_SUCCESS          = 0
 MORPHALYZER_ERROR_INVOCATION = 1
 MORPHALYZER_ERROR_RUNTIME    = 2
 
 MORPHALYZER_EXECUTABLE_NAME = 'morphalyze'
 
+require 'version'
 require 'getoptlong'
 require 'trmorph'
 
 
 def usage
-  $stderr.write "TR Language Tools TRMorph Wrapper, version #{MORPHALYZER_VERSION}                  \n"
+  $stderr.write "TR Language Tools TRMorph Wrapper, version #{TRTOOLS_VERSION}                      \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                                \n"
   $stderr.write "                                                                                   \n"
   $stderr.write "morphalyze [OPTIONS] <files|stdin>                                                 \n"

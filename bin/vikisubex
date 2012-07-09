@@ -10,20 +10,19 @@ INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
   File.readlink(__FILE__) : __FILE__) + '/..')
 $LOAD_PATH.unshift INSTALL_DIR + '/lib'
 
-VIKISUBEX_VERSION = "0.0.1"
-
 VIKISUBEX_SUCCESS          = 0
 VIKISUBEX_ERROR_INVOCATION = 1
 VIKISUBEX_ERROR_RUNTIME    = 2
 
 VIKISUBEX_EXECUTABLE_NAME = 'vikisubex'
 
+require 'version'
 require 'getoptlong'
 require 'vikisubex'
 
 
 def usage
-  $stderr.write "TR Language Tools Subtitle Downloader for Viki.com, version #{VIKISUBEX_VERSION} \n"
+  $stderr.write "TR Language Tools Subtitle Downloader for Viki.com, version #{TRTOOLS_VERSION}   \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "vikisubex [OPTIONS] <viki_video_url>                                             \n"
