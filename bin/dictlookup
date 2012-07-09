@@ -110,14 +110,18 @@ def print_html(vocabulary)
   $stdout.write "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" dir=\"ltr\">\n"
   $stdout.write "<head>\n"
   $stdout.write "  <title>Vocabulary List</title>\n"
+  $stdout.write "  <style type=\"text/css\">\n"
+  $stdout.write "    .source { border-right: 1px solid black;width:50%;padding:0.5ex 0.5em 0.5ex 0.5em;vertical-align:top; }\n"
+  $stdout.write "    .target { width:50%;padding:2px;padding:0.5ex 0.5em 0.5ex 0.5em;vertical-align:top; }\n"
+  $stdout.write "  </style>\n"
   $stdout.write "</head>\n"
   $stdout.write "<body style=\"font-family: sans-serif; margin: 5px; padding 0px;\">\n"
   unless vocabulary.empty?
     $stdout.write "  <table border=\"0\" style=\"width: 100%; border-collapse:collapse;\">\n"
     vocabulary.each_pair { |k, v|
       $stdout.write "    <tr>\n"
-      $stdout.write "      <td style=\"border-right: 1px solid black;width:50%;padding:0.5ex 0.5em 0.5ex 0.5em;vertical-align:top;\">#{k}</td>\n"
-      $stdout.write "      <td style=\"width:50%;padding:2px;padding:0.5ex 0.5em 0.5ex 0.5em;vertical-align:top;\">#{v.join(', ')}</td>\n"
+      $stdout.write "      <td class=\"source\">#{k}</td>\n"
+      $stdout.write "      <td class=\"target\">#{v.join(', ')}</td>\n"
       $stdout.write "    </tr>\n"
     }
     $stdout.write "  </table>\n"
