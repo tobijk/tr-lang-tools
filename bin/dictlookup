@@ -85,13 +85,45 @@ def parse_cmd_line
 end
 
 
-def print_xml(vocabulary)
+def print_text(vocabulary)
+  vocabulary.each_pair { |k, v|
+    puts "#{k}: #{v.join(', ')}\n"
+  }
+end
 
+
+def print_xml(vocabulary)
+  $stdout.write "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+  $stdout.write "<vocabulary>\n"
+  vocabulary.each_pair { |k, v|
+    $stdout.write "  <entry>\n"
+    $stdout.write "    <source>#{k}</source>\n"
+    $stdout.write "    <target>#{v.join(', ')}</target>\n"
+    $stdout.write "  </entry>\n"
+  }
+  $stdout.write "</vocabulary>\n"
 end
 
 
 def print_html(vocabulary)
-
+  $stdout.write "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
+  $stdout.write "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" dir=\"ltr\">\n"
+  $stdout.write "<head>\n"
+  $stdout.write "  <title>Vocabulary List</title>\n"
+  $stdout.write "</head>\n"
+  $stdout.write "<body style=\"font-family: sans-serif; margin: 5px; padding 0px;\">\n"
+  unless vocabulary.empty?
+    $stdout.write "  <table border=\"0\" style=\"width: 100%; border-collapse:collapse;\">\n"
+    vocabulary.each_pair { |k, v|
+      $stdout.write "    <tr>\n"
+      $stdout.write "      <td style=\"border-right: 1px solid black;width:50%;padding:0.5ex 0.5em 0.5ex 0.5em;vertical-align:top;\">#{k}</td>\n"
+      $stdout.write "      <td style=\"width:50%;padding:2px;padding:0.5ex 0.5em 0.5ex 0.5em;vertical-align:top;\">#{v.join(', ')}</td>\n"
+      $stdout.write "    </tr>\n"
+    }
+    $stdout.write "  </table>\n"
+  end
+  $stdout.write "</body>\n"
+  $stdout.write "</html>\n"
 end
 
 
@@ -99,6 +131,8 @@ begin # main()
 
   params = parse_cmd_line
   dictionary = OnlineDictionary::load_dictionary_provider(params)
+
+  result = {}
 
   ARGF.each_line do |token|
     token.strip!
@@ -110,21 +144,16 @@ begin # main()
       hints = []
     end
 
-    result = dictionary.translate(token, hints)
+    result.merge! dictionary.translate(token, hints)
+  end
 
-    case params[:format]
-      when :text
-        unless result.empty?
-          result.each_pair { |k, v|
-            puts "#{k}: #{v.join(', ')}\n"
-          }
-        end
-      when :xml
-        print_xml(result)
-      when :html
-        print_html(result)
-    end
-
+  case params[:format]
+    when :text
+      print_text(result)
+    when :xml
+      print_xml(result)
+    when :html
+      print_html(result)
   end
 
 rescue SystemExit => e
