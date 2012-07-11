@@ -1,0 +1,99 @@
+#! /usr/bin/ruby1.9.1
+#-*- encoding: utf-8 -*-
+#
+# Description: RSS feed reader with built-in dictionary lookup
+# Author:      Tobias Koch <tobias.koch@gmail.com>
+# License:     Public Domain
+#
+
+INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
+  File.readlink(__FILE__) : __FILE__) + '/..')
+$LOAD_PATH.unshift INSTALL_DIR + '/lib'
+
+TRRSS_SUCCESS          = 0
+TRRSS_ERROR_INVOCATION = 1
+TRRSS_ERROR_RUNTIME    = 2
+
+EXECUTABLE_NAME = File.basename($0)
+
+require 'version'
+require 'getoptlong'
+require 'tr_rss'
+
+KNOWN_RSS_PROVIDERS = {
+  'turk.internet.com'  => TurkInternetRSS,
+  'internetgazete.com' => InternetGazeteRSS,
+  'tknlj.com'          => TknljRSS,
+  'gazetevatan.com'    => GazeteVatanRSS
+}
+
+def usage
+  $stderr.write "TR Language Tools RSS feed reader, version #{TRTOOLS_VERSION}                    \n"
+  $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "#{EXECUTABLE_NAME} [OPTIONS] provider                                            \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "PROVIDERS:                                                                       \n"
+  KNOWN_RSS_PROVIDERS.keys.each do |provider|
+   $stderr.write " * #{provider}                                                                  \n"
+  end
+  $stderr.write "                                                                                 \n"
+  $stderr.write "OPTIONS:                                                                         \n"
+  $stderr.write " --help, -h               Print this help text and exit                          \n"
+  $stderr.write "                                                                                 \n"
+end
+
+
+def parse_cmd_line
+  params = { 'mode' => 'script' }
+
+  opts = GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT ],
+    ['--mode', '-m', GetoptLong::REQUIRED_ARGUMENT ]
+  )
+
+  begin
+    opts.quiet = true
+    opts.each do |opt, arg|
+      case opt
+        when '--help'
+          usage
+          exit TRRSS_SUCCESS
+        else
+      end
+    end
+  rescue GetoptLong::InvalidOption => e
+    $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
+    exit TRRSS_ERROR_INVOCATION
+  end
+
+  if ARGV.length != 1
+    $stderr.write "#{EXECUTABLE_NAME}: no provider specified\n"
+    exit TRRSS_ERROR_INVOCATION
+  end
+
+  provider = ARGV[0]
+
+  unless KNOWN_RSS_PROVIDERS.keys.include? provider
+    msg = "#{EXECUTABLE_NAME}: unknown RSS feed provider '#{provider}'\n"
+    $stderr.write msg
+    exit TRRSS_ERROR_INVOCATION
+  end
+
+  params[:provider] = KNOWN_RSS_PROVIDERS[provider].new
+  return params
+end
+
+
+begin # main()
+
+  params = parse_cmd_line
+#  params[:provider].get(params)
+
+rescue SystemExit => e
+  exit e.status
+rescue Exception => e
+  $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
+  exit TRRSS_ERROR_RUNTIME
+end
+
