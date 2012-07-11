@@ -14,7 +14,7 @@ VIKISUBEX_SUCCESS          = 0
 VIKISUBEX_ERROR_INVOCATION = 1
 VIKISUBEX_ERROR_RUNTIME    = 2
 
-VIKISUBEX_EXECUTABLE_NAME = 'vikisubex'
+EXECUTABLE_NAME = File.basename($0)
 
 require 'version'
 require 'getoptlong'
@@ -25,7 +25,7 @@ def usage
   $stderr.write "TR Language Tools Subtitle Downloader for Viki.com, version #{TRTOOLS_VERSION}   \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
   $stderr.write "                                                                                 \n"
-  $stderr.write "vikisubex [OPTIONS] <viki_video_url>                                             \n"
+  $stderr.write "#{EXECUTABLE_NAME} [OPTIONS] <viki_video_url>                                    \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "OPTIONS:                                                                         \n"
   $stderr.write " --help, -h            Print this help text and exit                             \n"
@@ -59,19 +59,19 @@ def parse_cmd_line
       end
     end
   rescue GetoptLong::InvalidOption => e
-    $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: #{e.message}\n"
+    $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
     exit VIKISUBEX_ERROR_INVOCATION
   end
 
   if ARGV.length != 1
-    $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: no URL specified\n"
+    $stderr.write "#{EXECUTABLE_NAME}: no URL specified\n"
     exit VIKISUBEX_ERROR_INVOCATION
   end
 
   begin
     video_url = URI(ARGV[0])
   rescue URI::InvalidURIError
-    $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: invalid URL\n"
+    $stderr.write "#{EXECUTABLE_NAME}: invalid URL\n"
     exit VIKISUBEX_ERROR_INVOCATION
   end
 
@@ -89,7 +89,7 @@ begin # main()
 rescue SystemExit => e
   exit e.status
 rescue Exception => e
-  $stderr.write "#{VIKISUBEX_EXECUTABLE_NAME}: #{e.message}\n"
+  $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
   exit VIKISUBEX_ERROR_RUNTIME
 end
 

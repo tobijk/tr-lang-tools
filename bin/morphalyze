@@ -14,7 +14,7 @@ MORPHALYZER_SUCCESS          = 0
 MORPHALYZER_ERROR_INVOCATION = 1
 MORPHALYZER_ERROR_RUNTIME    = 2
 
-MORPHALYZER_EXECUTABLE_NAME = 'morphalyze'
+EXECUTABLE_NAME = File.basename($0)
 
 require 'version'
 require 'getoptlong'
@@ -25,7 +25,7 @@ def usage
   $stderr.write "TR Language Tools TRMorph Wrapper, version #{TRTOOLS_VERSION}                      \n"
   $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                                \n"
   $stderr.write "                                                                                   \n"
-  $stderr.write "morphalyze [OPTIONS] <files|stdin>                                                 \n"
+  $stderr.write "#{EXECUTABLE_NAME} [OPTIONS] <files|stdin>                                         \n"
   $stderr.write "                                                                                   \n"
   $stderr.write "OPTIONS:                                                                           \n"
   $stderr.write " --help, -h            Print this help text and exit                               \n"
@@ -62,7 +62,7 @@ def parse_cmd_line
       end
     end
   rescue GetoptLong::InvalidOption => e
-    $stderr.write "#{MORPHALYZER_EXECUTABLE_NAME}: #{e.message}\n"
+    $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
     exit MORPHALYZER_ERROR_INVOCATION
   end
 
@@ -95,7 +95,7 @@ begin # main()
 rescue SystemExit => e
   exit e.status
 rescue Exception => e
-  $stderr.write "#{MORPHALYZER_EXECUTABLE_NAME}: #{e.message}\n"
+  $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
   exit MORPHALYZER_ERROR_RUNTIME
 end
 
