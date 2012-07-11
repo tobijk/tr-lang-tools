@@ -30,6 +30,55 @@ class OnlineDictionary
       end
     end
 
+    def format_text(vocabulary)
+      out = []
+      vocabulary.each_pair { |k, v|
+        out << "#{k}: #{v.join(', ')}\n"
+      }
+      return out.join('')
+    end
+
+
+    def format_xml(vocabulary, standalone = false)
+      out = []
+      unless standalone
+        out << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+      end
+      out << "<vocabulary>\n"
+      vocabulary.each_pair { |k, v|
+        out << "  <entry>\n"
+        out << "    <source>#{k}</source>\n"
+        out << "    <target>#{v.join(', ')}</target>\n"
+        out << "  </entry>\n"
+      }
+      out << "</vocabulary>\n"
+      return out.join('')
+    end
+
+
+    def format_html(vocabulary)
+      out = []
+      out << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
+      out << "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" dir=\"ltr\">\n"
+      out << "<head>\n"
+      out << "  <title>Vocabulary List</title>\n"
+      out << "</head>\n"
+      out << "<body>\n"
+      unless vocabulary.empty?
+        out << "  <table cellspacing=\"0\" cellpadding=\"5\" border=\"1\" width=\"100%\">\n"
+        vocabulary.each_pair { |k, v|
+          out << "    <tr>\n"
+          out << "      <td width=\"50%\">#{k}</td>\n"
+          out << "      <td width=\"50%\">#{v.join(', ')}</td>\n"
+          out << "    </tr>\n"
+        }
+        out << "  </table>\n"
+      end
+      out << "</body>\n"
+      out << "</html>\n"
+      return out.join('')
+    end
+
   end
 
 end

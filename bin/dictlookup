@@ -85,48 +85,6 @@ def parse_cmd_line
 end
 
 
-def print_text(vocabulary)
-  vocabulary.each_pair { |k, v|
-    puts "#{k}: #{v.join(', ')}\n"
-  }
-end
-
-
-def print_xml(vocabulary)
-  $stdout.write "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-  $stdout.write "<vocabulary>\n"
-  vocabulary.each_pair { |k, v|
-    $stdout.write "  <entry>\n"
-    $stdout.write "    <source>#{k}</source>\n"
-    $stdout.write "    <target>#{v.join(', ')}</target>\n"
-    $stdout.write "  </entry>\n"
-  }
-  $stdout.write "</vocabulary>\n"
-end
-
-
-def print_html(vocabulary)
-  $stdout.write "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n"
-  $stdout.write "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" dir=\"ltr\">\n"
-  $stdout.write "<head>\n"
-  $stdout.write "  <title>Vocabulary List</title>\n"
-  $stdout.write "</head>\n"
-  $stdout.write "<body>\n"
-  unless vocabulary.empty?
-    $stdout.write "  <table cellspacing=\"0\" cellpadding=\"5\" border=\"1\" width=\"100%\">\n"
-    vocabulary.each_pair { |k, v|
-      $stdout.write "    <tr>\n"
-      $stdout.write "      <td width=\"50%\">#{k}</td>\n"
-      $stdout.write "      <td width=\"50%\">#{v.join(', ')}</td>\n"
-      $stdout.write "    </tr>\n"
-    }
-    $stdout.write "  </table>\n"
-  end
-  $stdout.write "</body>\n"
-  $stdout.write "</html>\n"
-end
-
-
 begin # main()
 
   params = parse_cmd_line
@@ -149,11 +107,11 @@ begin # main()
 
   case params[:format]
     when :text
-      print_text(result)
+      puts OnlineDictionary::format_text(result)
     when :xml
-      print_xml(result)
+      puts OnlineDictionary::format_xml(result, true)
     when :html
-      print_html(result)
+      puts OnlineDictionary::format_html(result)
   end
 
 rescue SystemExit => e
