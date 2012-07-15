@@ -20,12 +20,6 @@ require 'version'
 require 'getoptlong'
 require 'tr_rss'
 
-KNOWN_RSS_PROVIDERS = {
-  'turk.internet.com'  => TurkInternetRSS,
-  'internetgazete.com' => InternetGazeteRSS,
-  'tknlj.com'          => TknljRSS,
-  'gazetevatan.com'    => GazeteVatanRSS
-}
 
 def usage
   $stderr.write "TR Language Tools RSS feed reader, version #{TRTOOLS_VERSION}                    \n"
@@ -34,8 +28,8 @@ def usage
   $stderr.write "#{EXECUTABLE_NAME} [OPTIONS] provider                                            \n"
   $stderr.write "                                                                                 \n"
   $stderr.write "PROVIDERS:                                                                       \n"
-  KNOWN_RSS_PROVIDERS.keys.each do |provider|
-   $stderr.write " * #{provider}                                                                  \n"
+  RSSFeedCore::available_providers.each do |p|
+   $stderr.write " * #{p}                                                                         \n"
   end
   $stderr.write "                                                                                 \n"
   $stderr.write "OPTIONS:                                                                         \n"
@@ -72,23 +66,19 @@ def parse_cmd_line
     exit TRRSS_ERROR_INVOCATION
   end
 
-  provider = ARGV[0]
-
-  unless KNOWN_RSS_PROVIDERS.keys.include? provider
-    msg = "#{EXECUTABLE_NAME}: unknown RSS feed provider '#{provider}'\n"
-    $stderr.write msg
-    exit TRRSS_ERROR_INVOCATION
-  end
-
-  params[:provider] = KNOWN_RSS_PROVIDERS[provider].new
   return params
 end
 
 
 begin # main()
 
+  # PARSE CMD LINE
   params = parse_cmd_line
-#  params[:provider].get(params)
+
+  # CREATE RSS FEED READER
+  unless provider = RSSFeedCore::create(ARGV[0], params)
+    raise RSSFeedCore::Error, "unknown RSS feed provider '#{ARGV[0]}'"
+  end
 
 rescue SystemExit => e
   exit e.status

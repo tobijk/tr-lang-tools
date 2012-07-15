@@ -5,15 +5,47 @@
 # License:     Public Domain
 #
 
-class TurkInternetRSS
+class RSSFeedCore
+
+  PROVIDERS = {}
+
+  class Error < RuntimeError
+  end
+
+  class << self
+
+    def register_provider(class_obj, name)
+      PROVIDERS[name] = class_obj
+    end
+
+    def available_providers
+      return PROVIDERS.keys
+    end
+
+    def create(provider_name, params)
+      PROVIDERS[provider_name] ? PROVIDERS[provider_name].new(params) : nil
+    end
+
+  end
+
+  def retrieve_rss(uri)
+  end
+
 end
 
-class InternetGazeteRSS
+class TurkInternetRSS < RSSFeedCore
+  RSSFeedCore::register_provider(self, 'turk.internet.com')
 end
 
-class TknljRSS
+class InternetGazeteRSS < RSSFeedCore
+  RSSFeedCore::register_provider(self, 'internetgazete.com')
 end
 
-class GazeteVatanRSS
+class TknljRSS < RSSFeedCore
+  RSSFeedCore::register_provider(self, 'tknlj.com')
+end
+
+class GazeteVatanRSS < RSSFeedCore
+  RSSFeedCore::register_provider(self, 'gazetevatan.com')
 end
 
