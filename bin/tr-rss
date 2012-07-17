@@ -80,9 +80,12 @@ begin # main()
     raise RSSFeedCore::Error, "unknown RSS feed provider '#{ARGV[0]}'"
   end
 
+  provider.retrieve_rss
+
 rescue SystemExit => e
   exit e.status
 rescue Exception => e
+  raise
   $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
   exit TRRSS_ERROR_RUNTIME
 end
