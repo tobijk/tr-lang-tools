@@ -80,7 +80,8 @@ begin # main()
     raise RSSFeedCore::Error, "unknown RSS feed provider '#{ARGV[0]}'"
   end
 
-  provider.retrieve_rss
+  result = provider.retrieve_rss
+  puts result
 
 rescue SystemExit => e
   exit e.status

@@ -7,10 +7,103 @@
 
 require 'open-uri'
 require 'nokogiri'
+require 'erb'
+
+ECMDS_TEMPLATE = ERB.new(<<'EOF')
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book SYSTEM "http://www.ecromedos.net/dtd/2.0/ecromedos.dtd">
+<report lang="en_US" fontsize="11pt" papersize="a4paper" div="14" bcor="0cm"
+        secnumdepth="0" secsplitdepth="1">
+
+        <head>
+                <title><%= title %></title>
+                <author></author>
+                <date></date>
+                <publisher></publisher>
+        </head>
+
+        <make-toc depth="3" lof="no" lot="no" lol="no"/>
+        
+        <% articles.each do |article| %>
+          <chapter>
+            <title><%= article.title %></title>
+            <p>
+              <b>
+                <%= article.desc %>
+              </b>
+            </p>
+            <%= article.content.root.children.to_s %>
+          </chapter>
+        <% end %>
+
+</report>
+EOF
 
 class RSSFeedCore
 
   PROVIDERS = {}
+
+  SANITIZE_XSL1 = <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+  <xsl:template match="/*">
+    <article><xsl:apply-templates/></article>
+  </xsl:template>
+
+  <xsl:template match="p">
+    <xsl:choose>
+      <xsl:when test="normalize-space(translate(string(.), '&#xa0;', '')) = ''">
+        <!-- cut -->
+      </xsl:when>
+      <xsl:when test="ancestor::p">
+        <xsl:apply-templates/>
+      </xsl:when>
+      <xsl:otherwise>
+        <p><xsl:apply-templates/></p>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="a[@href]">
+    <link url="{@href}"><xsl:apply-templates/></link>
+  </xsl:template>
+
+  <xsl:template match="*">
+    <xsl:choose>
+      <xsl:when test="
+          self::br or
+          self::i  or
+          self::b
+        ">
+        <xsl:copy>
+          <xsl:apply-templates/>
+        </xsl:copy>
+      </xsl:when>
+      <xsl:when test="not(ancestor-or-self::p)">
+        <!-- cut -->
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:apply-templates/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="text()">
+    <xsl:value-of select="."/>
+  </xsl:template>
+
+  <xsl:template match="script">
+    <!-- cut -->
+  </xsl:template>
+
+  <xsl:template match="comment()">
+    <!-- cut -->
+  </xsl:template>
+
+</xsl:stylesheet>
+EOF
+
 
   class Error < RuntimeError
   end
@@ -35,8 +128,8 @@ class RSSFeedCore
     attr_accessor :title, :link, :date, :desc, :img, :content
   end
 
-  def retrieve_rss
-    items = Array.new
+  def retrieve_rss(format = 'ecromedos')
+    articles = Array.new
 
     xml_doc = open(feed_url) do |rss|
       Nokogiri::XML(rss.read)
@@ -59,16 +152,83 @@ class RSSFeedCore
         rss_item.desc = desc.content
 
         # call sub-class implementing this interface
-        rss_item.content = retrieve_article(rss_item.link) or next
+        rss_item.content = retrieve_article(
+          transform_link(rss_item.link)
+        ) or next
 
-        items << rss_item
+        articles << rss_item
       rescue Exception => e
+        raise
         # skip this item
       end
     end
 
-    require 'pp'
-    pp items
+    return ECMDS_TEMPLATE.result(binding)
+  end
+
+  def retrieve_article(link)
+    xml_content = nil
+
+    # download doc and do some basic preparation
+    xml_doc0 = open(link) do |html|
+      buf = html.read\
+        .gsub(/\s+/, ' ')\
+        .gsub(/<(?:BR)>/i, '<br/>')\
+        .gsub(/<(\/)?(?:STRONG)>/i, '<\1b>')\
+        .gsub(/(?:<br\/>\s*){2,}/, '<br/><br/>')
+      xml_tmp = Nokogiri::HTML(buf) do |config|
+        config.nonet.noent.nocdata.noerror.nowarning.recover
+      end
+      IO.popen('tidy -quiet -utf8 -indent -asxml --doctype strict 2>/dev/null', 'r+') do |fp|
+        fp.write(xml_tmp.to_xhtml(:encoding => 'utf-8'))
+        fp.close_write
+        Nokogiri::HTML(fp.read) do |config|
+          config.nonet.noent.nocdata.noerror.nowarning.recover
+        end
+      end
+    end
+
+    # nest stray elements in paragraph
+    tmp_para = []
+    content_node = extract_content(xml_doc0)
+
+    child = content_node ? content_node.child : nil
+    while child
+      if !['table', 'ul', 'ol', 'p'].include?(child.name)
+        tmp_para << child
+      elsif !tmp_para.empty?
+        new_para = Nokogiri::XML::Element.new('p', xml_doc0)
+        tmp_para.each do |element|
+          new_para.add_child(element)
+        end
+        child.add_previous_sibling(new_para)
+        tmp_para.clear
+      end
+      child = child.next_sibling
+    end
+
+    if !tmp_para.empty?
+      new_para = Nokogiri::XML::Element.new('p', xml_doc0)
+      tmp_para.each do |element|
+        new_para.add_child(element)
+      end
+      content_node.add_child(new_para)
+    end
+
+    # mangle into semantic markup
+    begin
+      xml_doc1 = Nokogiri::XML::Document.new
+      xml_doc1.encoding = 'utf-8'
+
+      content_node.dup(1).parent = xml_doc1
+
+      xml_content = Nokogiri::XSLT(SANITIZE_XSL1).transform(xml_doc1)
+      xml_content.encoding = 'utf-8'
+    rescue Exception => e
+      return nil
+    end
+
+    return xml_content
   end
 
 end
@@ -78,6 +238,17 @@ class TurkInternetRSS < RSSFeedCore
 
   def feed_url
     'http://turk.internet.com/rss/guncel.rss'
+  end
+
+  def transform_link(link)
+    m = link.match('http://turk.internet.com/haber/yazigoster.php3\?yaziid=(\d+)')
+    return "http://www.turk.internet.com/portal/yaziyaz.php?yaziid=#{m[1]}"
+  end
+
+  def extract_content(xml_doc)
+    xml_doc.at_xpath(
+      "//table/tr/td"
+    )
   end
 
   RSSFeedCore::register_provider(self, 'turk.internet.com')
@@ -90,19 +261,14 @@ class HurriyetRSS < RSSFeedCore
     'http://rss.hurriyet.com.tr/rss.aspx?sectionId=1'
   end
 
-  def retrieve_article(link)
-    xml_doc = open(link) do |html|
-      Nokogiri::HTML(html.read)
-    end
+  def transform_link(link)
+    return link
+  end
 
-    begin
-      content = xml_doc.at_xpath(
-        "//div[@id='DivAdnetHaberDetay']//div[@class='txt']").content.strip
-    rescue Exception
-      return nil
-    end
-
-    return content
+  def extract_content(xml_doc)
+      xml_doc.at_xpath(
+        "//div[@id='DivAdnetHaberDetay']//div[@class='txt']"
+      )
   end
 
   RSSFeedCore::register_provider(self, 'hurriyet.com.tr')
@@ -115,6 +281,13 @@ class TknljRSS < RSSFeedCore
     'http://www.tknlj.com/feed/'
   end
 
+  def transform_link(link)
+    return link
+  end
+
+  def extract_content(xml_doc)
+  end
+
   RSSFeedCore::register_provider(self, 'tknlj.com')
 end
 
@@ -123,6 +296,13 @@ class GazeteVatanRSS < RSSFeedCore
 
   def feed_url
     'http://rss.gazetevatan.com/rss/teknoloji.xml'
+  end
+
+  def transform_link(link)
+    return link
+  end
+
+  def extract_content(xml_doc)
   end
 
   RSSFeedCore::register_provider(self, 'gazetevatan.com')
