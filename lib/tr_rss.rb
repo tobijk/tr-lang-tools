@@ -80,6 +80,9 @@ class RSSFeedCore
           <xsl:apply-templates/>
         </xsl:copy>
       </xsl:when>
+      <xsl:when test="self::div[normalize-space(@class)='module']">
+        <!-- cut -->
+      </xsl:when>
       <xsl:when test="not(ancestor-or-self::p)">
         <!-- cut -->
       </xsl:when>
@@ -132,29 +135,42 @@ EOF
     articles = Array.new
 
     xml_doc = open(feed_url) do |rss|
-      Nokogiri::XML(rss.read)
+      # HACK for libxml/Nokogiri bug
+      rss = rss.read\
+        .gsub('xmlns="http://www.w3.org/2005/Atom"', '')
+      Nokogiri::XML(rss)
     end
 
-    title = xml_doc.at_xpath('//channel//title').content
+    rss_type = xml_doc.root.name
 
-    xml_doc.xpath('//item').each do |xml_item|
+    title = if rss_type == 'feed'
+        xml_doc.at_xpath("//feed//title").content
+      else
+        xml_doc.at_xpath("//channel//title").content
+      end
+
+    xml_doc.xpath('//item|//entry').each do |xml_item|
       begin
-        rss_item       = RSSItem.new
-        rss_item.title = xml_item.at_xpath('title').content
-        rss_item.link  = xml_item.at_xpath('link').content
-        rss_item.date  = Time.parse(xml_item.at_xpath('pubDate').content)
+        rss_item        = RSSItem.new
+        rss_item.title  = xml_item.at_xpath('title').content
+        if rss_type == 'feed'
+          rss_item.link = xml_item.at_xpath('link/@href').content
+          rss_item.date = Time.parse(xml_item.at_xpath('published').content)
+        else
+          rss_item.link = xml_item.at_xpath('link').content
+          rss_item.date = Time.parse(xml_item.at_xpath('pubDate').content)
+        end
 
         desc = xml_item.at_xpath('description') || \
+          xml_item.at_xpath('summary')          || \
           xml_item.at_xpath('content:encoded')
         desc = Nokogiri::XML("<desc>" + desc.content + "</desc>")
 
         rss_item.img = desc.at_xpath('//a[1]/@href').to_s
         rss_item.desc = desc.content
 
-        # call sub-class implementing this interface
-        rss_item.content = retrieve_article(
-          transform_link(rss_item.link)
-        ) or next
+        link = transform_link(rss_item.link) or next
+        rss_item.content = retrieve_article(link) or next
 
         articles << rss_item
       rescue Exception => e
@@ -175,7 +191,8 @@ EOF
         .gsub(/\s+/, ' ')\
         .gsub(/<(?:BR)>/i, '<br/>')\
         .gsub(/<(\/)?(?:STRONG)>/i, '<\1b>')\
-        .gsub(/(?:<br\/>\s*){2,}/, '<br/><br/>')
+        .gsub(/(?:<br\/>\s*){2,}/, '<br/><br/>')\
+        .gsub(/<\/?(?:g:)?plusone[^>]*>/, '')
       xml_tmp = Nokogiri::HTML(buf) do |config|
         config.nonet.noent.nocdata.noerror.nowarning.recover
       end
@@ -241,8 +258,12 @@ class TurkInternetRSS < RSSFeedCore
   end
 
   def transform_link(link)
-    m = link.match('http://turk.internet.com/haber/yazigoster.php3\?yaziid=(\d+)')
-    return "http://www.turk.internet.com/portal/yaziyaz.php?yaziid=#{m[1]}"
+    begin
+      m = link.match('http://turk.internet.com/haber/yazigoster.php3\?yaziid=(\d+)')
+      return "http://www.turk.internet.com/portal/yaziyaz.php?yaziid=#{m[1]}"
+    rescue
+      return nil
+    end
   end
 
   def extract_content(xml_doc)
@@ -262,13 +283,18 @@ class HurriyetRSS < RSSFeedCore
   end
 
   def transform_link(link)
-    return link
+    begin
+      m = link.match('http://www.hurriyet.com.tr/.*/(\d+).asp')
+      return "http://hurarsiv.hurriyet.com.tr/goster/printnews.aspx?DocID=#{m[1]}"
+    rescue
+      return nil
+    end
   end
 
   def extract_content(xml_doc)
-      xml_doc.at_xpath(
-        "//div[@id='DivAdnetHaberDetay']//div[@class='txt']"
-      )
+    xml_doc.at_xpath(
+      "//div[@class='HaberText']"
+    )
   end
 
   RSSFeedCore::register_provider(self, 'hurriyet.com.tr')
@@ -286,25 +312,31 @@ class TknljRSS < RSSFeedCore
   end
 
   def extract_content(xml_doc)
+    xml_doc.at_xpath(
+      "//div[@class='post clearfix']"
+    )
   end
 
   RSSFeedCore::register_provider(self, 'tknlj.com')
 end
 
 
-class GazeteVatanRSS < RSSFeedCore
+class BBCTurkish < RSSFeedCore
 
   def feed_url
-    'http://rss.gazetevatan.com/rss/teknoloji.xml'
+    'http://www.bbc.co.uk/turkce/index.xml'
   end
 
   def transform_link(link)
-    return link
+    return "#{link}?print=1"
   end
 
   def extract_content(xml_doc)
+    xml_doc.at_xpath(
+      "//div[@class='g-container story-body']//div[@class='bodytext']"
+    )
   end
 
-  RSSFeedCore::register_provider(self, 'gazetevatan.com')
+  RSSFeedCore::register_provider(self, 'bbc.com.tr')
 end
 
