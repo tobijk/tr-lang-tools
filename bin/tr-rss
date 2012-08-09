@@ -39,11 +39,10 @@ end
 
 
 def parse_cmd_line
-  params = { 'mode' => 'script' }
+  params = {}
 
   opts = GetoptLong.new(
-    ['--help', '-h', GetoptLong::NO_ARGUMENT ],
-    ['--mode', '-m', GetoptLong::REQUIRED_ARGUMENT ]
+    ['--help', '-h', GetoptLong::NO_ARGUMENT ]
   )
 
   begin

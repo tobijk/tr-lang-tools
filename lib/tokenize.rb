@@ -44,9 +44,7 @@ class Tokenizer
     sort!(result) if @params[:sort]
     result.uniq!  if @params[:unique]
 
-    result.each do |token|
-      puts token
-    end
+    return result
   end
 
   def sort!(tokens)

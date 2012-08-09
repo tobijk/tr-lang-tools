@@ -8,11 +8,14 @@
 require 'open-uri'
 require 'nokogiri'
 require 'erb'
+require 'tokenize'
+require 'trmorph'
+require 'dictlookup'
 
 ECMDS_TEMPLATE = ERB.new(<<'EOF')
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book SYSTEM "http://www.ecromedos.net/dtd/2.0/ecromedos.dtd">
-<report lang="en_US" fontsize="11pt" papersize="a4paper" div="14" bcor="0cm"
+<report lang="en_US" fontsize="11pt" papersize="a5paper" div="16" bcor="0cm"
         secnumdepth="0" secsplitdepth="1">
 
         <head>
@@ -23,10 +26,25 @@ ECMDS_TEMPLATE = ERB.new(<<'EOF')
         </head>
 
         <make-toc depth="3" lof="no" lot="no" lol="no"/>
-        
+
         <% articles.each do |article| %>
           <chapter>
             <title><%= article.title %></title>
+            <minisection>
+              <title>Sözlük</title>
+              <table print-width="100%" screen-width="600px" frame="left">
+                <colgroup>
+                  <col width="50%"/>
+                  <col width="50%"/>
+                </colgroup>
+                <% vocabulary.each_pair do |word, meanings| %>
+                  <tr>
+                    <td frame="colsep"><%= word %></td>
+                    <td><%= meanings.join(', ') %></td>
+                  </tr>
+                <% end %>
+              </table>
+            </minisection>
             <p>
               <b>
                 <%= article.desc %>
@@ -39,11 +57,7 @@ ECMDS_TEMPLATE = ERB.new(<<'EOF')
 </report>
 EOF
 
-class RSSFeedCore
-
-  PROVIDERS = {}
-
-  SANITIZE_XSL1 = <<EOF
+SANITIZE_XSL1 = <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -107,6 +121,9 @@ class RSSFeedCore
 </xsl:stylesheet>
 EOF
 
+class RSSFeedCore
+
+  PROVIDERS = {}
 
   class Error < RuntimeError
   end
@@ -131,8 +148,15 @@ EOF
     attr_accessor :title, :link, :date, :desc, :img, :content
   end
 
+  def initialize(params = {})
+    @tokenizer = Tokenizer.new(:sort => true, :unique => true)
+    @trmorph   = TRMorph.new(:hint => true)
+    @dict      = OnlineDictionaryGoogle.new(:verbose => false)
+  end
+
   def retrieve_rss(format = 'ecromedos')
     articles = Array.new
+    vocabulary = {}
 
     xml_doc = open(feed_url) do |rss|
       # HACK for libxml/Nokogiri bug
@@ -172,14 +196,36 @@ EOF
         link = transform_link(rss_item.link) or next
         rss_item.content = retrieve_article(link) or next
 
+        vocabulary = build_vocabulary(rss_item)
+
         articles << rss_item
       rescue Exception => e
-        raise
         # skip this item
       end
     end
 
     return ECMDS_TEMPLATE.result(binding)
+  end
+
+  def build_vocabulary(rss_item)
+    content = rss_item.title  + ' ' + rss_item.desc + ' ' \
+      + rss_item.content.content
+
+    token_list = @tokenizer.tokenize(content)
+    vocabulary = Hash.new { |h, k| h[k] = [] }
+
+    token_list.each do |token|
+      root_count = @trmorph.find_roots(token, vocabulary)
+      vocabulary[token] if root_count == 0
+    end
+
+    translations = {}
+
+    vocabulary.each_pair do |word, hints|
+      translations.merge! @dict.translate(word, hints)
+    end
+
+    return translations
   end
 
   def retrieve_article(link)

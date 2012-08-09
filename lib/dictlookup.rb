@@ -109,10 +109,10 @@ EOF
     @verbose = params[:verbose]
   end
 
-  def translate(token, hint)
+  def translate(token, hints)
     translations = {}
 
-    token.strip!
+    token = token.strip
     term = URI::encode_www_form_component(token)
     uri = URI("http://en.pons.eu/dict/search/results/?l=detr&in=tr&lf=tr&q=#{term}")
 
@@ -172,7 +172,7 @@ class OnlineDictionaryGoogle < OnlineDictionary
   def translate(token, hints)
     translations = {}
 
-    token.strip!
+    token = token.strip
     term = URI::encode_www_form_component(token)
     uri = URI("http://translate.google.com/translate_a/t?client=t&text=#{term}&hl=en&sl=tr&tl=en&ie=UTF-8&oe=UTF-8")
 
@@ -197,12 +197,12 @@ class OnlineDictionaryGoogle < OnlineDictionary
 
     # check if there is a match for the exact word type
     unless hints.empty?
-      page[1].each { |t| translations["#{token} (#{t[0]})"] = t[1][0,5] if hints.include? t[0] }
+      page[1].each { |t| translations["#{token} (#{t[0]})".gsub(/\(\)/, '')] = t[1][0,5] if hints.include? t[0] }
     end
 
     # fallback
     if translations.empty?
-      page[1].each { |t| translations["#{token} (#{t[0]})"] = t[1][0,5] }
+      page[1].each { |t| translations["#{token} (#{t[0]})".gsub(/\(\)/, '')] = t[1][0,5] }
     end
 
     return translations

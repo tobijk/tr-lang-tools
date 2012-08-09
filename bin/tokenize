@@ -75,15 +75,23 @@ begin # main()
   params = parse_cmd_line
   tokenizer = Tokenizer.new(params)
 
+  result = []
+
   if params[:sort] || params[:unique]
     buffer = []
     ARGF.each_line do |line|
       buffer << line
     end
-    tokenizer.tokenize buffer.join(' ')
+    result = tokenizer.tokenize buffer.join(' ')
+    result.each do |token|
+      puts token
+    end
   else
     ARGF.each_line do |line|
-      tokenizer.tokenize line
+      result = tokenizer.tokenize line
+      result.each do |token|
+        puts token
+      end
     end
   end
 
