@@ -30,21 +30,6 @@ ECMDS_TEMPLATE = ERB.new(<<'EOF')
         <% articles.each do |article| %>
           <chapter>
             <title><%= article.title %></title>
-            <minisection>
-              <title>Sözlük</title>
-              <table print-width="100%" screen-width="600px" frame="left">
-                <colgroup>
-                  <col width="50%"/>
-                  <col width="50%"/>
-                </colgroup>
-                <% vocabulary.each_pair do |word, meanings| %>
-                  <tr>
-                    <td frame="colsep"><%= word %></td>
-                    <td><%= meanings.join(', ') %></td>
-                  </tr>
-                <% end %>
-              </table>
-            </minisection>
             <p>
               <b>
                 <%= article.desc %>
@@ -55,6 +40,21 @@ ECMDS_TEMPLATE = ERB.new(<<'EOF')
         <% end %>
 
 </report>
+EOF
+
+ECMDS_TABLE_TEMPLATE = ERB.new(<<'EOF')
+<table print-width="100%" screen-width="600px" align="left" frame="left">
+  <colgroup>
+    <col width="50%"/>
+    <col width="50%"/>
+  </colgroup>
+  <% vocabulary.each_pair do |word, meanings| %>
+    <tr>
+      <td frame="colsep"><%= word %></td>
+      <td><%= meanings.join(', ') %></td>
+    </tr>
+  <% end %>
+</table>
 EOF
 
 SANITIZE_XSL1 = <<EOF
@@ -196,22 +196,38 @@ class RSSFeedCore
         link = transform_link(rss_item.link) or next
         rss_item.content = retrieve_article(link) or next
 
-        vocabulary = build_vocabulary(rss_item)
-
         articles << rss_item
       rescue Exception => e
         # skip this item
       end
     end
 
-    return ECMDS_TEMPLATE.result(binding)
+    article = Nokogiri::XML(ECMDS_TEMPLATE.result(binding))
+    insert_vocabulary_sheets(article)
+    return article.to_s
   end
 
-  def build_vocabulary(rss_item)
-    content = rss_item.title  + ' ' + rss_item.desc + ' ' \
-      + rss_item.content.content
+  def insert_vocabulary_sheets(article)
+    article.xpath("//chapter").each do |chapter|
+      next_node = chapter.first_element_child
 
-    token_list = @tokenizer.tokenize(content)
+      until next_node.nil?
+        current_node = next_node
+        vocabulary   = build_vocabulary(current_node.content)
+
+        unless vocabulary.empty?
+          table = ECMDS_TABLE_TEMPLATE.result(binding)
+          table = Nokogiri::XML(table).root
+          table.unlink
+          current_node = current_node.add_next_sibling table
+        end
+        next_node = current_node.next_element
+      end
+    end
+  end
+
+  def build_vocabulary(text)
+    token_list = @tokenizer.tokenize(text)
     vocabulary = Hash.new { |h, k| h[k] = [] }
 
     token_list.each do |token|
