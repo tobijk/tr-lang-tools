@@ -152,7 +152,7 @@ class RSSFeedCore
     @tokenizer = Tokenizer.new(:sort => true, :unique => true)
     @trmorph   = TRMorph.new(:hint => true)
     @dict      = OnlineDictionary::load_dictionary_provider({
-                                            :provider => :pons,
+                                            :provider => :google,
                                             :verbose => false
                                           })
   end
