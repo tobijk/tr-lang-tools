@@ -155,6 +155,7 @@ class RSSFeedCore
                                             :provider => :google,
                                             :verbose => false
                                           })
+    @limit = params[:limit]
   end
 
   def retrieve_rss(format = 'ecromedos')
@@ -175,6 +176,8 @@ class RSSFeedCore
       else
         xml_doc.at_xpath("//channel//title").content
       end
+
+    count = 0
 
     xml_doc.xpath('//item|//entry').each do |xml_item|
       begin
@@ -200,6 +203,8 @@ class RSSFeedCore
         rss_item.content = retrieve_article(link) or next
 
         articles << rss_item
+        count += 1
+        break if @limit > 0 && count >= @limit
       rescue Exception => e
         # skip this item
       end
@@ -318,6 +323,10 @@ end
 
 class TurkInternetRSS < RSSFeedCore
 
+  def initialize(params = {})
+    super
+  end
+
   def feed_url
     'http://turk.internet.com/rss/guncel.rss'
   end
@@ -342,6 +351,10 @@ end
 
 
 class HurriyetRSS < RSSFeedCore
+
+  def initialize(params = {})
+    super
+  end
 
   def feed_url
     'http://rss.hurriyet.com.tr/rss.aspx?sectionId=1'
@@ -368,6 +381,10 @@ end
 
 class TknljRSS < RSSFeedCore
 
+  def initialize(params = {})
+    super
+  end
+
   def feed_url
     'http://www.tknlj.com/feed/'
   end
@@ -387,6 +404,10 @@ end
 
 
 class BBCTurkish < RSSFeedCore
+
+  def initialize(params = {})
+    super
+  end
 
   def feed_url
     'http://www.bbc.co.uk/turkce/index.xml'
