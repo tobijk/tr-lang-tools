@@ -31,6 +31,8 @@ following fashion
     #!/bin/sh
     exec fst-parse /usr/lib/trmorph/trmorph.a $*
 
+The RSS reader also needs a copy of htmltidy installed.
+
 
 TOOLKIT DESCRIPTION
 
