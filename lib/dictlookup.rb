@@ -81,6 +81,38 @@ class OnlineDictionary
 
   end
 
+  def initialize(params = {})
+    @translations = {}
+  end
+
+  def translate_cached(token, hints)
+    result = {}
+
+    # first check cached results with hints
+    unless hints.empty?
+      hints.each do |h|
+        if @translations["#{token} (#{h})"]
+          result["#{token} (#{h})"] = @translations["#{token} (#{h})"]
+        end
+      end
+    end
+
+    # then check cached results without hints
+    if result.empty?
+      if @translations[token]
+        result[token] = @translations[token]
+      end
+    end
+
+    # resort to online lookup
+    if result.empty?
+      result.merge!(self.translate(token, hints))
+      @translations.merge!(result)
+    end
+
+    return result
+  end
+
 end
 
 
@@ -105,6 +137,7 @@ class OnlineDictionaryPons < OnlineDictionary
 EOF
 
   def initialize(params = {})
+    super
     @stylesheet = Nokogiri::XSLT(XSL_STYLESHEET)
     @verbose = params[:verbose]
   end
@@ -166,6 +199,7 @@ end
 class OnlineDictionaryGoogle < OnlineDictionary
 
   def initialize(params = {})
+    super
     @params = { :verbose => false }.merge!(params)
   end
 

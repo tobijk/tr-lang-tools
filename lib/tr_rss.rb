@@ -151,7 +151,10 @@ class RSSFeedCore
   def initialize(params = {})
     @tokenizer = Tokenizer.new(:sort => true, :unique => true)
     @trmorph   = TRMorph.new(:hint => true)
-    @dict      = OnlineDictionaryGoogle.new(:verbose => false)
+    @dict      = OnlineDictionary::load_dictionary_provider({
+                                            :provider => :pons,
+                                            :verbose => false
+                                          })
   end
 
   def retrieve_rss(format = 'ecromedos')
@@ -238,7 +241,7 @@ class RSSFeedCore
     translations = {}
 
     vocabulary.each_pair do |word, hints|
-      translations.merge! @dict.translate(word, hints)
+      translations.merge! @dict.translate_cached(word, hints)
     end
 
     return translations
