@@ -34,7 +34,7 @@ def usage
   $stderr.write "                                                                                 \n"
   $stderr.write "OPTIONS:                                                                         \n"
   $stderr.write " --help, -h               Print this help text and exit                          \n"
-  $stderr.rwite " --num, -n <limit>        Limit number of articles to download                   \n"               
+  $stderr.write " --num, -n <limit>        Limit number of articles to download                   \n"               
   $stderr.write "                                                                                 \n"
 end
 
