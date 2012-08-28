@@ -17,7 +17,7 @@
 
         <section>
             <title>Vocabulary</title>
-            <table print-width="100%" screen-width="600px" align="left">
+            <table print-width="100%" screen-width="600px" align="left" frame="left,colsep">
                 <colgroup>
                     <col width="50%"/>
                     <col width="50%"/>
