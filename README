@@ -61,3 +61,8 @@ translation services. It takes as input a list of words and returns a series of
 translations including common phrases and compound expressions as provided by
 the dictionary.
 
+5. The RSS Reader
+
+'tr-rss' downloads full articles from a selection of online newspapers and
+inserts a vocabulary listing after every paragraph of text.
+
