@@ -1,0 +1,86 @@
+#! /usr/bin/ruby1.9.1
+#-*- encoding: utf-8 -*-
+#
+# Description: Read SRT file and insert vocab after each caption
+# Author:      Tobias Koch <tobias.koch@gmail.com>
+# License:     Public Domain
+#
+
+INSTALL_DIR = File.expand_path(File.dirname(File.symlink?(__FILE__) ?
+  File.readlink(__FILE__) : __FILE__) + '/..')
+$LOAD_PATH.unshift INSTALL_DIR + '/lib'
+
+SUBCOMMENT_SUCCESS       = 0
+SUBCOMMENT_INVOCATION    = 1
+SUBCOMMENT_ERROR_RUNTIME = 2
+
+EXECUTABLE_NAME = File.basename($0)
+
+require 'version'
+require 'getoptlong'
+require 'srt_commenter.rb'
+
+
+def usage
+  $stderr.write "TR Language Tools SRT commenter, version #{TRTOOLS_VERSION}                      \n"
+  $stderr.write "Copyright 2012, Tobias Koch <tobias.koch@gmail.com>                              \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "#{EXECUTABLE_NAME} [OPTIONS] <srt_subtitle_file>                                 \n"
+  $stderr.write "                                                                                 \n"
+  $stderr.write "OPTIONS:                                                                         \n"
+  $stderr.write " --help, -h               Print this help text and exit                          \n"
+  $stderr.write "                                                                                 \n"
+end
+
+
+def parse_cmd_line
+  params = { :limit => 0 }
+
+  opts = GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT ]
+  )
+
+  begin
+    opts.quiet = true
+    opts.each do |opt, arg|
+      case opt
+        when '--help'
+          usage
+          exit SUBCOMMENT_SUCCESS
+      end
+    end
+  rescue GetoptLong::InvalidOption => e
+    $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
+    exit SUBCOMMENT_INVOCATION
+  end
+
+  if ARGV.length != 1
+    $stderr.write "#{EXECUTABLE_NAME}: no subtitle file specified\n"
+    exit SUBCOMMENT_INVOCATION
+  end
+
+  unless File.exist?(ARGV[0])
+    $stderr.write "#{EXECUTABLE_NAME}: no such file '#{ARGV[0]}'\n"
+    exit SUBCOMMENT_INVOCATION
+  end
+
+  return params, ARGV[0]
+end
+
+
+begin # main()
+
+  # PARSE CMD LINE
+  params, srt_filename = parse_cmd_line
+  subcom = SRTCommenter.new
+
+  puts subcom.read_srt(srt_filename)
+
+rescue SystemExit => e
+  exit e.status
+rescue Exception => e
+  raise
+  $stderr.write "#{EXECUTABLE_NAME}: #{e.message}\n"
+  exit SUBCOMMENT__RUNTIME
+end
+
